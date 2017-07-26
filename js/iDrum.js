@@ -62,6 +62,47 @@ window.addEventListener(evt, function(){
 
 }, false);
 
+//copied from https://github.com/kittykatattack/learningPixi#movingexplorer
+// making basic keyboard movement
+function keyboard(keyCode) {
+    var key = {};
+    key.code = keyCode;
+    key.isDown = false;
+    key.isUp = true;
+    key.press = undefined;
+    key.release = undefined;
+    //The `downHandler`
+    key.downHandler = function(event) {
+        if (event.keyCode === key.code) {
+            if (key.isUp && key.press) key.press();
+            key.isDown = true;
+            key.isUp = false;
+        }
+        event.preventDefault();
+    };
+
+    //The `upHandler`
+    key.upHandler = function(event) {
+        if (event.keyCode === key.code) {
+            if (key.isDown && key.release) key.release();
+            key.isDown = false;
+            key.isUp = true;
+        }
+        event.preventDefault();
+    };
+
+    //Attach event listeners
+    window.addEventListener(
+        "keydown", key.downHandler.bind(key), false
+    );
+    window.addEventListener(
+        "keyup", key.upHandler.bind(key), false
+    );
+    return key;
+}
+
+
+
 //add welcome text
 var wMessage = new PIXI.Text(
     "Welcome to iDrum!", {fontFamily: "Arial", fontSize: 46, fill: "white"});
@@ -88,20 +129,284 @@ welcomeStage.click = welcomeStage.tap = function(data){
     console.log(data.target);
     welcomeStage.visible = false;
     choiceStage.visible = true;
+    setupChoiceStage();
     renderer.render(stage);
-};
+};//end of welcome page
 
+//choiceStage
+//load background images
 var bgList = [];
 for(var i = 0; i < 5; i++)
 {
-    var pic = new Image();
-    pic.src = "../src/img/" + i + ".jpg";
-    bgList.append(pic);
+    var src = "../src/img/" + i + ".jpg";
+    var texture = PIXI.Texture.fromImage(src);
+    bgList.push(texture);
 }
+var bg = new PIXI.extras.AnimatedSprite(bgList, false);
+bg.onFrameChange = function(){
 
-var songList = [];
+};
+
+var nameList = [];
 for(i = 0; i < 5; i++)
 {
     var str = "Song: " + i;
-    songList.append(str);
+    nameList.push(str);
+}
+
+//choose from ChoiceStage, apply in GameStage
+var currentSongNum = 0;
+var songVelocity = 1;
+var isMuted = false;
+
+function setupChoiceStage(){
+    currentSongNum = 1;
+    var width = document.documentElement.clientWidth;
+    var height = document.documentElement.clientHeight;
+    var ratio = (Math.sqrt(5) - 1)/2;
+
+    var triangle1 = new PIXI.Graphics();
+    triangle1.lineStyle(3, 0x000000, 1);
+    triangle1.beginFill(0xFFFFFF, 0.9);
+
+    triangle1.drawPolygon([
+        0, 0,
+        0, ratio*height,
+        ratio*height, 0
+    ]);
+    triangle1.endFill();
+
+    var triangle2 = new PIXI.Graphics();
+    triangle2.lineStyle(3, 0x000000, 1);
+    triangle2.beginFill(0xFFFFFF, 0.9);
+    var midX = 0;
+    var midY = 0;
+    if(ratio*width-height > 0)
+    {
+        triangle2.drawPolygon([
+            0, 0,
+            ratio*width-height, 0,
+            ratio*width, height,
+            0, height
+        ]);
+
+        midX = (ratio*width-height+ratio*height)/2;
+        midY = (ratio*height-height+ratio*width)/2;
+    }
+    else
+    {
+        triangle2.drawPolygon([
+            0, height-ratio*width,
+            ratio*width, height,
+            0, height
+        ]);
+
+        midX = (ratio*height-height+ratio*width)/2;
+        midY = (ratio*width-height+ratio*height)/2;
+    }
+    triangle2.endFill();
+
+    //display the name of the songs
+    if(currentSongNum > 0 && currentSongNum < nameList.length - 1)
+    {
+        var formerName = new PIXI.Text(nameList[currentSongNum - 1],
+            {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
+        formerName.anchor.set(0.5, 0.5);
+        formerName.position.set(midX, midY+150);
+
+        var Name = new PIXI.Text(nameList[currentSongNum],
+            {fontFamily: "Helvetica", fontSize: 36, fontWeight: "lighter", fill: "black"});
+        Name.anchor.set(0.5, 0.5);
+        Name.position.set(midX, formerName.position.y+formerName.height+30);
+
+        var latterName = new PIXI.Text(nameList[currentSongNum+1],
+            {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
+        latterName.anchor.set(0.5, 0.5);
+        latterName.position.set(midX, Name.position.y+Name.height+24);
+
+    }
+
+
+    bg.width = width;
+    bg.height = height;
+    bg.gotoAndStop(currentSongNum);
+    choiceStage.addChild(bg);
+    choiceStage.addChild(triangle1);
+    choiceStage.addChild(triangle2);
+    choiceStage.addChild(formerName);
+    choiceStage.addChild(Name);
+    choiceStage.addChild(latterName);
+    triangle2.interactive = true;
+    triangle2.click = function(event){
+        //console.log(event.target);
+        var temp = currentSongNum;
+        if(event.data.global.y < Name.position.y-Name.height/2-20)
+        {
+            if(currentSongNum > 0)
+            {
+                currentSongNum--;
+            }
+        }
+        else if(event.data.global.y > Name.position.y+Name.height/2+20)
+        {
+            if(currentSongNum+1 < nameList.length)
+            {
+                currentSongNum++;
+            }
+        }
+
+        if(currentSongNum !== temp)
+        {
+            if(currentSongNum > 0)
+            {
+                formerName.text = nameList[currentSongNum-1];
+            }
+            else
+            {
+                formerName.text = "";
+            }
+            Name.text = nameList[currentSongNum];
+            if(currentSongNum+1 < nameList.length)
+            {
+                latterName.text = nameList[currentSongNum+1];
+            }
+            else
+            {
+                latterName.text = "";
+            }
+
+            bg.gotoAndPlay(currentSongNum);
+            renderer.render(stage);
+        }
+    };
+
+    //entry to the game
+    var StartButton = new PIXI.Graphics();
+    StartButton.lineStyle(2, 0xFFFFFF, 1);
+    StartButton.beginFill(0x516374, 0.93);
+    StartButton.drawPolygon([
+        0.85*width, 0.6*height,
+        0.85*width+0.15*height, 0.75*height,
+        0.85*width, 0.9*height,
+        0.85*width-0.15*height, 0.75*height,
+        0.85*width, 0.6*height,
+    ]);
+    StartButton.endFill();
+
+    var GoText = new PIXI.Text("GO",
+        {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "white"});
+    GoText.anchor.set(0.5, 0.5);
+    GoText.position.set(0.85*width, 0.75*height);
+    StartButton.addChild(GoText);
+
+    StartButton.interactive = true;
+    StartButton.buttonMode = true;
+    StartButton.click = function(event){
+        //console.log(event.target);
+        choiceStage.visible = false;
+        gameStage.visible = true;
+        setupGameStage();
+        renderer.render(stage);
+    };
+
+    //velocity
+    var VButton = new PIXI.Graphics();
+    VButton.lineStyle(2, 0xFFFFFF, 1);
+    VButton.beginFill(0x516374, 0.93);
+    VButton.drawPolygon([
+        0.85*width-0.15*height, 0.75*height,
+        0.85*width-0.225*height, 0.825*height,
+        0.85*width-0.3*height, 0.75*height,
+        0.85*width-0.225*height, 0.675*height,
+        0.85*width-0.15*height, 0.75*height,
+    ]);
+    VButton.endFill();
+
+    songVelocity = 2;
+    var VText = new PIXI.Text(String(songVelocity),
+        {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "white"});
+    VText.anchor.set(0.5, 0.5);
+    VText.position.set(0.85*width-0.225*height, 0.75*height);
+    VButton.addChild(VText);
+
+    //v-
+    var DownButton = new PIXI.Graphics();
+    DownButton.lineStyle(2, 0xFFFFFF, 1);
+    DownButton.beginFill(0x516374, 0.93);
+    DownButton.drawPolygon([
+        0.85*width-0.225*height, 0.675*height,
+        0.85*width-0.3*height, 0.75*height,
+        0.85*width-0.375*height, 0.675*height,
+        0.85*width-0.3*height, 0.6*height,
+        0.85*width-0.225*height, 0.675*height,
+    ]);
+
+    var DownText = new PIXI.Text("--",
+        {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "white"});
+    DownText.anchor.set(0.5, 0.5);
+    DownText.position.set(0.85*width-0.3*height, 0.675*height);
+    DownButton.addChild(DownText);
+
+    DownButton.interactive = true;
+    DownButton.buttonMode = true;
+    DownButton.click = function(event){
+        if(songVelocity > 1)
+        {
+            songVelocity--;
+            VText.text = String(songVelocity);
+            renderer.render(stage);
+        }
+    };
+
+    //v+
+    var UpButton = new PIXI.Graphics();
+    UpButton.lineStyle(2, 0xFFFFFF, 1);
+    UpButton.beginFill(0x516374, 0.93);
+    UpButton.drawPolygon([
+        0.85*width-0.15*height, 0.75*height,
+        0.85*width-0.225*height, 0.825*height,
+        0.85*width-0.15*height, 0.9*height,
+        0.85*width-0.075*height, 0.825*height
+    ]);
+
+    var UpText = new PIXI.Text("++",
+        {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "white"});
+    UpText.anchor.set(0.5, 0.5);
+    UpText.position.set(0.85*width-0.15*height, 0.825*height);
+    UpButton.addChild(UpText);
+
+    UpButton.interactive = true;
+    UpButton.buttonMode = true;
+    UpButton.click = function(event){
+        if(songVelocity < 9)
+        {
+            songVelocity++;
+            VText.text = String(songVelocity);
+            renderer.render(stage);
+        }
+    };
+
+    //volume button
+    var VolumeButton = new PIXI.Graphics();
+    VolumeButton.lineStyle(2, 0xFFFFFF, 1);
+    VolumeButton.beginFill(0x516374, 0.93);
+    VolumeButton.drawPolygon([
+        0.85*width-0.15*height, 0.75*height,
+        0.85*width-0.075*height, 0.675*height,
+        0.85*width-0.15*height, 0.6*height,
+        0.85*width-0.225*height, 0.675*height,
+        0.85*width-0.15*height, 0.75*height
+    ]);
+
+    choiceStage.addChild(StartButton);
+    choiceStage.addChild(VButton);
+    choiceStage.addChild(DownButton);
+    choiceStage.addChild(UpButton);
+    choiceStage.addChild(VolumeButton);
+
+}
+
+function setupGameStage()
+{
+
 }
