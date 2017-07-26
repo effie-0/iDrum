@@ -121,7 +121,6 @@ img.onload = function(){
     welcomeStage.addChild(wMessage);
     renderer.render(stage);
 
-    //sprite.interactive = true;
 };
 
 welcomeStage.interactive = true;
@@ -143,9 +142,6 @@ for(var i = 0; i < 5; i++)
     bgList.push(texture);
 }
 var bg = new PIXI.extras.AnimatedSprite(bgList, false);
-bg.onFrameChange = function(){
-
-};
 
 var nameList = [];
 for(i = 0; i < 5; i++)
@@ -158,6 +154,16 @@ for(i = 0; i < 5; i++)
 var currentSongNum = 0;
 var songVelocity = 1;
 var isMuted = false;
+
+var muteList = [];
+var src1 = "../src/img/icon/MUTE.png";
+var src2 = "../src/img/icon/UNMUTE.png";
+var texture1 = PIXI.Texture.fromImage(src1);
+var texture2 = PIXI.Texture.fromImage(src2);
+muteList.push(texture1);
+muteList.push(texture2);
+
+var muteView = new PIXI.extras.AnimatedSprite(muteList, false);
 
 function setupChoiceStage(){
     currentSongNum = 1;
@@ -212,7 +218,7 @@ function setupChoiceStage(){
         var formerName = new PIXI.Text(nameList[currentSongNum - 1],
             {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
         formerName.anchor.set(0.5, 0.5);
-        formerName.position.set(midX, midY+150);
+        formerName.position.set(midX, midY+0.24*height);
 
         var Name = new PIXI.Text(nameList[currentSongNum],
             {fontFamily: "Helvetica", fontSize: 36, fontWeight: "lighter", fill: "black"});
@@ -289,7 +295,7 @@ function setupChoiceStage(){
         0.85*width+0.15*height, 0.75*height,
         0.85*width, 0.9*height,
         0.85*width-0.15*height, 0.75*height,
-        0.85*width, 0.6*height,
+        0.85*width, 0.6*height
     ]);
     StartButton.endFill();
 
@@ -301,7 +307,7 @@ function setupChoiceStage(){
 
     StartButton.interactive = true;
     StartButton.buttonMode = true;
-    StartButton.click = function(event){
+    StartButton.click = function(){
         //console.log(event.target);
         choiceStage.visible = false;
         gameStage.visible = true;
@@ -318,7 +324,7 @@ function setupChoiceStage(){
         0.85*width-0.225*height, 0.825*height,
         0.85*width-0.3*height, 0.75*height,
         0.85*width-0.225*height, 0.675*height,
-        0.85*width-0.15*height, 0.75*height,
+        0.85*width-0.15*height, 0.75*height
     ]);
     VButton.endFill();
 
@@ -338,8 +344,9 @@ function setupChoiceStage(){
         0.85*width-0.3*height, 0.75*height,
         0.85*width-0.375*height, 0.675*height,
         0.85*width-0.3*height, 0.6*height,
-        0.85*width-0.225*height, 0.675*height,
+        0.85*width-0.225*height, 0.675*height
     ]);
+    DownButton.endFill();
 
     var DownText = new PIXI.Text("--",
         {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "white"});
@@ -349,7 +356,7 @@ function setupChoiceStage(){
 
     DownButton.interactive = true;
     DownButton.buttonMode = true;
-    DownButton.click = function(event){
+    DownButton.click = function(){
         if(songVelocity > 1)
         {
             songVelocity--;
@@ -368,6 +375,7 @@ function setupChoiceStage(){
         0.85*width-0.15*height, 0.9*height,
         0.85*width-0.075*height, 0.825*height
     ]);
+    UpButton.endFill();
 
     var UpText = new PIXI.Text("++",
         {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "white"});
@@ -377,7 +385,7 @@ function setupChoiceStage(){
 
     UpButton.interactive = true;
     UpButton.buttonMode = true;
-    UpButton.click = function(event){
+    UpButton.click = function(){
         if(songVelocity < 9)
         {
             songVelocity++;
@@ -397,6 +405,38 @@ function setupChoiceStage(){
         0.85*width-0.225*height, 0.675*height,
         0.85*width-0.15*height, 0.75*height
     ]);
+    VolumeButton.endFill();
+
+    if(!isMuted)
+    {
+        muteView.gotoAndStop(0);
+    }
+    else
+    {
+        muteView.gotoAndStop(1);
+    }
+    muteView.width = 30;
+    muteView.height = 30;
+    muteView.anchor.set(0.5, 0.5);
+    muteView.position.set(0.85*width-0.15*height, 0.675*height);
+    VolumeButton.addChild(muteView);
+
+    VolumeButton.interactive = true;
+    VolumeButton.buttonMode = true;
+    VolumeButton.click = function(){
+        if(isMuted)
+        {
+            isMuted = false;
+            muteView.gotoAndStop(0);
+            //todo: set the volume
+        }
+        else
+        {
+            isMuted = true;
+            muteView.gotoAndStop(1);
+        }
+        renderer.render(stage);
+    };
 
     choiceStage.addChild(StartButton);
     choiceStage.addChild(VButton);
@@ -408,5 +448,98 @@ function setupChoiceStage(){
 
 function setupGameStage()
 {
+    var isPaused = false;
+
+    gameStage.addChild(bg);
+    var width = document.documentElement.clientWidth;
+    var height = document.documentElement.clientHeight;
+
+    var cover = new PIXI.Graphics();
+    cover.beginFill(0xFFFFFF, 0.9);
+    cover.drawRect(0, 0, width, height);
+    cover.endFill();
+    gameStage.addChild(cover);
+
+    var PauseImg = new Image();
+    PauseImg.src = "../src/img/icon/PAUSE.png";
+    PauseImg.onload = function(){
+        var baseTexture = new PIXI.BaseTexture(this);
+        var texture = new PIXI.Texture(baseTexture);
+        var sprite = new PIXI.Sprite(texture);
+        sprite.position.set(0.03*height, 0.03*height);
+        sprite.width = 0.05*height;
+        sprite.height = 0.05*height;
+        gameStage.addChild(sprite);
+        renderer.render(stage);
+
+        sprite.interactive = true;
+        sprite.buttonMode = true;
+        sprite.click = function(){
+            if(!isPaused)
+            {
+                isPaused = true;
+                //todo: pause the music
+
+                //show the pause panel
+                var PausePanel = new PIXI.Container();
+                var PauseCover = new PIXI.Graphics();
+                cover.visible = false;
+                PauseCover.beginFill(0x3A006F, 0.5);
+                PauseCover.drawRect(0, 0, width, height);
+                PauseCover.endFill();
+
+                var SelectButton = new PIXI.Graphics();
+                SelectButton.beginFill(0xFFFFFF, 0.9);
+                SelectButton.drawPolygon([
+                    width/2, height/6,
+                    width/2+height/6, height/3,
+                    width/2, height/2,
+                    width/2-height/6, height/3
+                ]);
+                SelectButton.endFill();
+
+                var ResumeButton = new PIXI.Graphics();
+                ResumeButton.beginFill(0xFFFFFF, 0.9);
+                ResumeButton.drawPolygon([
+                    width/2+height/6, height/3,
+                    width/2+height/3, height/2,
+                    width/2+height/6, height/3*2,
+                    width/2, height/2
+                ]);
+                ResumeButton.endFill();
+
+                var RetryButton = new PIXI.Graphics();
+                RetryButton.beginFill(0xFFFFFF, 0.9);
+                RetryButton.drawPolygon([
+                    width/2, height/2,
+                    width/2+height/6, height/3*2,
+                    width/2, height/6*5,
+                    width/2-height/6, height/3*2
+                ]);
+                RetryButton.endFill();
+
+                var MenuButton = new PIXI.Graphics();
+                MenuButton.beginFill(0xFFFFFF, 0.9);
+                MenuButton.drawPolygon([
+                    width/2, height/2,
+                    width/2-height/6, height/3*2,
+                    width/2-height/3, height/2,
+                    width/2-height/6, height/3
+                ]);
+                MenuButton.endFill();
+
+                PausePanel.addChild(PauseCover);
+                PausePanel.addChild(SelectButton);
+                PausePanel.addChild(ResumeButton);
+                PausePanel.addChild(RetryButton);
+                PausePanel.addChild(MenuButton);
+
+                gameStage.addChild(PausePanel);
+                renderer.render(stage);
+            }
+        };
+
+    };
+
 
 }
