@@ -17,7 +17,7 @@ if(!PIXI.utils.isWebGLSupported())
 PIXI.utils.sayHello(type);
 
 //add the renderer.view(an instance of WebGL or canvas) which occupies the window to the body
-var renderer = PIXI.autoDetectRenderer(2*window.innerWidth, 2*window.innerHeight);
+var renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
 renderer.view.style.position = "absolute";
 renderer.view.style.display = "block";
 renderer.autoResize = true;
@@ -43,8 +43,8 @@ endStage.visible = false;
 var evt = "onorientationchange" in window ? "orientationchange" : "resize";
 window.addEventListener(evt, function(){
     console.log(evt);
-    var width = 2*document.documentElement.clientWidth;
-    var height = 2*document.documentElement.clientHeight;
+    var width = document.documentElement.clientWidth;
+    var height = document.documentElement.clientHeight;
     if(width < height)
     {
         renderer.resize(height, width);
