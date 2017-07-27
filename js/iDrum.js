@@ -154,6 +154,7 @@ for(i = 0; i < 5; i++)
 var currentSongNum = 0;
 var songVelocity = 1;
 var isMuted = false;
+var isPaused = false;
 
 var muteList = [];
 var src1 = "../src/img/icon/MUTE.png";
@@ -165,7 +166,16 @@ muteList.push(texture2);
 
 var muteView = new PIXI.extras.AnimatedSprite(muteList, false);
 
+//point and other statistics
+var point = 0;
+var maxPerfect = 0;
+var perfect = 0;
+var combo = 0;
+var ok = 0;
+var miss = 0;
+
 function setupChoiceStage(){
+    choiceStage.removeChildren();
     currentSongNum = 1;
     var width = document.documentElement.clientWidth;
     var height = document.documentElement.clientHeight;
@@ -448,17 +458,40 @@ function setupChoiceStage(){
 
 function setupGameStage()
 {
-    var isPaused = false;
+    gameStage.removeChildren();
+    isPaused = false;
+
+    //initializing statistics
+    maxPerfect = 0;
+    perfect = 0;
+    combo = 0;
+    ok = 0;
+    miss = 0;
 
     gameStage.addChild(bg);
     var width = document.documentElement.clientWidth;
     var height = document.documentElement.clientHeight;
 
     var cover = new PIXI.Graphics();
-    cover.beginFill(0xFFFFFF, 0.9);
+    cover.beginFill(0xFFFFFF, 0.85);
     cover.drawRect(0, 0, width, height);
     cover.endFill();
     gameStage.addChild(cover);
+
+    //point, todo: update points
+    point = 0;
+    var pointText = new PIXI.Text(String(point),
+        {fontFamily: "Helvetica", fontSize: 32, fontWeight:"lighter", fill: "0x3A006F"});
+    pointText.anchor.set(1, 0);
+    pointText.position.set(width - 0.05*height, 0.05*height);
+    gameStage.addChild(pointText);
+
+    var nameText = new PIXI.Text(nameList[currentSongNum],
+        {fontFamily: "Helvetica", fontSize: 20, fontWeight:"lighter", fill: "0x3A006F"});
+    nameText.anchor.set(1, 0);
+    nameText.position.set(pointText.position.x, pointText.position.y+pointText.height+10);
+    gameStage.addChild(nameText);
+
 
     var PauseImg = new Image();
     PauseImg.src = "../src/img/icon/PAUSE.png";
@@ -498,6 +531,24 @@ function setupGameStage()
                 ]);
                 SelectButton.endFill();
 
+                var SelectText = new PIXI.Text("Song Select",
+                    {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "0x3A006F"});
+                SelectText.anchor.set(0.5, 0.5);
+                SelectText.position.set(width/2, height/3);
+                SelectButton.addChild(SelectText);
+
+                SelectButton.interactive = true;
+                SelectButton.buttonMode = true;
+                SelectButton.click = function(){
+                    //todo: quit the song
+                    isPaused = false;
+                    gameStage.removeChild(PausePanel);
+                    gameStage.visible = false;
+                    choiceStage.visible = true;
+                    choiceStage.addChildAt(bg, 0);
+                    renderer.render(stage);
+                };
+
                 var ResumeButton = new PIXI.Graphics();
                 ResumeButton.beginFill(0xFFFFFF, 0.9);
                 ResumeButton.drawPolygon([
@@ -507,6 +558,22 @@ function setupGameStage()
                     width/2, height/2
                 ]);
                 ResumeButton.endFill();
+
+                var ResumeText = new PIXI.Text("Resume",
+                    {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "0x3A006F"});
+                ResumeText.anchor.set(0.5, 0.5);
+                ResumeText.position.set(width/2+height/6, height/2);
+                ResumeButton.addChild(ResumeText);
+
+                ResumeButton.interactive = true;
+                ResumeButton.buttonMode = true;
+                ResumeButton.click = function(){
+                    isPaused = false;
+                    //todo: resume the music
+                    gameStage.removeChild(PausePanel);
+                    cover.visible = true;
+                    renderer.render(stage);
+                };
 
                 var RetryButton = new PIXI.Graphics();
                 RetryButton.beginFill(0xFFFFFF, 0.9);
@@ -518,6 +585,27 @@ function setupGameStage()
                 ]);
                 RetryButton.endFill();
 
+                var RetryText = new PIXI.Text("Retry",
+                    {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "0x3A006F"});
+                RetryText.anchor.set(0.5, 0.5);
+                RetryText.position.set(width/2, height/3*2);
+                RetryButton.addChild(RetryText);
+
+                RetryButton.interactive = true;
+                RetryButton.buttonMode = true;
+                RetryButton.click = function(){
+                    //todo: restart the song
+                    isPaused = false;
+                    gameStage.removeChild(PausePanel);
+                    cover.visible = true;
+
+                    //just a text
+                    /*gameStage.visible = false;
+                    endStage.visible = true;
+                    setupEndStage();*/
+                    renderer.render(stage);
+                };
+
                 var MenuButton = new PIXI.Graphics();
                 MenuButton.beginFill(0xFFFFFF, 0.9);
                 MenuButton.drawPolygon([
@@ -528,11 +616,36 @@ function setupGameStage()
                 ]);
                 MenuButton.endFill();
 
+                var MenuText = new PIXI.Text("Main Menu",
+                    {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "0x3A006F"});
+                MenuText.anchor.set(0.5, 0.5);
+                MenuText.position.set(width/2-height/6, height/2);
+                MenuButton.addChild(MenuText);
+
+                MenuButton.interactive = true;
+                MenuButton.buttonMode = true;
+                MenuButton.click = function(){
+                    //todo: quit the song
+                    isPaused = false;
+                    gameStage.removeChild(PausePanel);
+                    gameStage.visible = false;
+                    welcomeStage.visible = true;
+                    renderer.render(stage);
+                };
+
+                var Cross = new PIXI.Graphics();
+                Cross.lineStyle(3, 0x3A006F, 1);
+                Cross.moveTo(width/2-height/6, height/3);
+                Cross.lineTo(width/2+height/6, height/3*2);
+                Cross.moveTo(width/2+height/6, height/3);
+                Cross.lineTo(width/2-height/6, height/3*2);
+
                 PausePanel.addChild(PauseCover);
                 PausePanel.addChild(SelectButton);
                 PausePanel.addChild(ResumeButton);
                 PausePanel.addChild(RetryButton);
                 PausePanel.addChild(MenuButton);
+                PausePanel.addChild(Cross);
 
                 gameStage.addChild(PausePanel);
                 renderer.render(stage);
@@ -542,4 +655,231 @@ function setupGameStage()
     };
 
 
+}
+
+function setupEndStage()
+{
+    endStage.removeChildren();
+
+    endStage.addChild(bg);
+    var width = document.documentElement.clientWidth;
+    var height = document.documentElement.clientHeight;
+
+    var cover = new PIXI.Graphics();
+    cover.beginFill(0xFFFFFF, 0.85);
+    cover.drawRect(0, 0, width, height);
+    cover.endFill();
+    endStage.addChild(cover);
+
+    var nameText = new PIXI.Text(nameList[currentSongNum],
+        {fontFamily: "Helvetica", fontSize: 36, fontWeight:"lighter", fill: "0x3A006F"});
+    nameText.anchor.set(0.5, 1);
+    nameText.position.set(width/4, height/3);
+    endStage.addChild(nameText);
+
+    var pointText = new PIXI.Text(String(point),
+        {fontFamily: "Helvetica", fontSize: 36, fontWeight:"lighter", fill: "0x3A006F"});
+    pointText.anchor.set(0.5, 0);
+    pointText.position.set(width/4, height/3*2);
+    endStage.addChild(pointText);
+
+    var scoreText = new PIXI.Text("Total Score",
+        {fontFamily: "Helvetica", fontSize: 16, fontWeight:"lighter", fill: "0x3A006F"});
+    scoreText.anchor.set(0.5, 1);
+    scoreText.position.set(pointText.position.x-pointText.width/2, pointText.position.y-5);
+    endStage.addChild(scoreText);
+
+    var display = new PIXI.Graphics();
+    display.lineStyle(2, 0xFFFFFF, 1);
+    display.beginFill(0x516374, 0.93);
+    display.drawPolygon([
+        width/2, 0.2*height,
+        width/2+0.1*height, 0.1*height,
+        width/2+0.4*height, 0.4*height,
+        width/2+0.3*height, 0.5*height,
+        width/2, 0.2*height
+    ]);
+
+    display.drawPolygon([
+        width/2, 0.4*height,
+        width/2+0.1*height, 0.5*height,
+        width/2+0.4*height, 0.2*height,
+        width/2+0.3*height, 0.1*height,
+        width/2, 0.4*height
+    ]);
+
+    display.drawPolygon([
+        width/2+0.3*height, 0.3*height,
+        width/2+0.5*height, 0.1*height,
+        width/2+0.7*height, 0.3*height,
+        width/2+0.5*height, 0.5*height,
+        width/2+0.3*height, 0.3*height
+    ]);
+    display.endFill();
+
+    var maxNumText = new PIXI.Text(String(maxPerfect),
+        {fontFamily: "Helvetica", fontSize: 28, fontWeight:"lighter", fill: "0xFFFFFF"});
+    maxNumText.anchor.set(0.5, 0.5);
+    maxNumText.position.set(width/2+0.1*height, 0.2*height);
+    display.addChild(maxNumText);
+
+    var maxText = new PIXI.Text("Max",
+        {fontFamily: "Helvetica", fontSize: 12, fontWeight:"lighter", fill: "0xFFFFFF"});
+    maxText.anchor.set(0.5, 0);
+    maxText.position.set(maxNumText.position.x, maxNumText.position.y+maxNumText.height/2);
+    display.addChild(maxText);
+
+    var perfectNumText = new PIXI.Text(String(perfect),
+        {fontFamily: "Helvetica", fontSize: 28, fontWeight:"lighter", fill: "0xFFFFFF"});
+    perfectNumText.anchor.set(0.5, 0.5);
+    perfectNumText.position.set(width/2+0.3*height, 0.2*height);
+    display.addChild(perfectNumText);
+
+    var perfectText = new PIXI.Text("Perfect",
+        {fontFamily: "Helvetica", fontSize: 12, fontWeight:"lighter", fill: "0xFFFFFF"});
+    perfectText.anchor.set(0.5, 0);
+    perfectText.position.set(perfectNumText.x, perfectNumText.y+perfectNumText.height/2);
+    display.addChild(perfectText);
+
+    var comboNumText = new PIXI.Text(String(combo),
+        {fontFamily: "Helvetica", fontSize: 28, fontWeight:"lighter", fill: "0xFFFFFF"});
+    comboNumText.anchor.set(0.5, 0.5);
+    comboNumText.position.set(width/2+0.2*height, 0.3*height);
+    display.addChild(comboNumText);
+
+    var comboText = new PIXI.Text("Combo",
+        {fontFamily: "Helvetica", fontSize: 12, fontWeight:"lighter", fill: "0xFFFFFF"});
+    comboText.anchor.set(0.5, 0);
+    comboText.position.set(comboNumText.x, comboNumText.y+comboNumText.height/2);
+    display.addChild(comboText);
+
+    var okNumText = new PIXI.Text(String(ok),
+        {fontFamily: "Helvetica", fontSize: 28, fontWeight:"lighter", fill: "0xFFFFFF"});
+    okNumText.anchor.set(0.5, 0.5);
+    okNumText.position.set(width/2+0.1*height, 0.4*height);
+    display.addChild(okNumText);
+
+    var okText = new PIXI.Text("Ok",
+        {fontFamily: "Helvetica", fontSize: 12, fontWeight:"lighter", fill: "0xFFFFFF"});
+    okText.anchor.set(0.5, 0);
+    okText.position.set(okNumText.x, okNumText.y+okNumText.height/2);
+    display.addChild(okText);
+
+    var missNumText = new PIXI.Text(String(miss),
+        {fontFamily: "Helvetica", fontSize: 28, fontWeight:"lighter", fill: "0xFFFFFF"});
+    missNumText.anchor.set(0.5, 0.5);
+    missNumText.position.set(width/2+0.3*height, 0.4*height);
+    display.addChild(missNumText);
+
+    var missText = new PIXI.Text("Miss",
+        {fontFamily: "Helvetica", fontSize: 12, fontWeight:"lighter", fill: "0xFFFFFF"});
+    missText.anchor.set(0.5, 0);
+    missText.position.set(missNumText.x, missNumText.y+missNumText.height/2);
+    display.addChild(missText);
+
+    var grade = "";
+    if(point < 50)
+    {
+        grade = "F";
+    }
+    else if(point < 60)
+    {
+        grade = "E";
+    }
+    else if(point < 70)
+    {
+        grade = "D";
+    }
+    else if(point < 80)
+    {
+        grade = "C";
+    }
+    else if(point < 90)
+    {
+        grade = "B";
+    }
+    else if(point !== 100)
+    {
+        grade = "A";
+    }
+    else
+    {
+        grade = "A+";
+    }
+
+    var gradeText = new PIXI.Text(grade,
+        {fontFamily: "Helvetica", fontSize: 40, fontWeight:"lighter", fill: "0xFFFFFF"});
+    gradeText.anchor.set(0.5, 0.5);
+    gradeText.position.set(width/2+0.5*height, 0.3*height);
+    display.addChild(gradeText);
+
+    var againButton = new PIXI.Graphics();
+    againButton.lineStyle(2, 0xFFFFFF, 1);
+    againButton.beginFill(0x516374, 0.93);
+    againButton.drawPolygon([
+        width/2+0.3*height, 0.8*height,
+        width/2+0.4*height, 0.7*height,
+        width/2+0.5*height, 0.8*height,
+        width/2+0.4*height, 0.9*height,
+        width/2+0.3*height, 0.8*height
+    ]);
+    againButton.endFill();
+
+    var againText = new PIXI.Text("Again",
+        {fontFamily: "Helvetica", fontSize: 22, fontWeight:"lighter", fill: "0xFFFFFF"});
+    againText.anchor.set(0.5, 0.5);
+    againText.position.set(width/2+0.4*height, 0.8*height);
+    againButton.addChild(againText);
+
+    againButton.interactive = true;
+    againButton.buttonMode = true;
+    againButton.click = function(){
+        endStage.visible = false;
+        gameStage.visible = true;
+        setupGameStage();
+        renderer.render(stage);
+    };
+
+    var nextButton = new PIXI.Graphics();
+    nextButton.lineStyle(2, 0xFFFFFF, 1);
+    nextButton.beginFill(0x516374, 0.93);
+    nextButton.drawPolygon([
+        width/2+0.5*height, 0.8*height,
+        width/2+0.6*height, 0.7*height,
+        width/2+0.7*height, 0.8*height,
+        width/2+0.6*height, 0.9*height,
+        width/2+0.5*height, 0.8*height
+    ]);
+    nextButton.endFill();
+
+    var nextText = new PIXI.Text("Next",
+        {fontFamily: "Helvetica", fontSize: 22, fontWeight:"lighter", fill: "0xFFFFFF"});
+    nextText.anchor.set(0.5, 0.5);
+    nextText.position.set(width/2+0.6*height, 0.8*height);
+    nextButton.addChild(nextText);
+
+    nextButton.interactive = true;
+    nextButton.buttonMode = true;
+    nextButton.click = function(){
+        endStage.visible = false;
+        choiceStage.visible = true;
+        setupChoiceStage();
+        renderer.render(stage);
+    };
+
+
+    endStage.addChild(display);
+    endStage.addChild(againButton);
+    endStage.addChild(nextButton);
+}
+
+//todo
+function gameLoop()
+{
+    if(!isPaused)
+        requestAnimationFrame(gameLoop);
+
+
+
+    renderer.render(stage);
 }
