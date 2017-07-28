@@ -314,7 +314,11 @@ function loadTrack(fileName){
 
 function popBeat(currentTime){
     busArray.splice(0,busArray.length);
-    if(typeof(beatFlow[playPointer].time) != "number"){
+
+    if(playPointer >= beatFlow.length)
+        return;
+
+    if(typeof(beatFlow[playPointer].time) !== "number"){
         return;
     }
     //console.info(parseInt(beatFlow[playPointer].time));
@@ -322,6 +326,8 @@ function popBeat(currentTime){
     while(beatFlow[playPointer].time <= currentTime){
         busArray.push(beatFlow[playPointer]);
         playPointer++;
+        if(playPointer >= beatFlow.length)
+            break;
     }
     //console.info(busArray.length);
 }

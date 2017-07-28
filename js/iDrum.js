@@ -16,11 +16,26 @@ if(!PIXI.utils.isWebGLSupported())
 }
 PIXI.utils.sayHello(type);
 
+var width = 0;
+var height = 0;
+
+if(window.innerWidth >= window.innerHeight/3*5)
+{
+    width = window.innerHeight/3*5;
+    height = window.innerHeight;
+}
+else
+{
+    width = window.innerWidth;
+    height = window.innerWidth * 0.6;
+}
+
+
 //add the renderer.view(an instance of WebGL or canvas) which occupies the window to the body
-var renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
+var renderer = PIXI.autoDetectRenderer(width, height);
 renderer.view.style.position = "absolute";
 renderer.view.style.display = "block";
-renderer.autoResize = true;
+//renderer.autoResize = true;
 document.body.appendChild(renderer.view);
 var stage = new PIXI.Container();
 
@@ -39,70 +54,20 @@ choiceStage.visible = false;
 gameStage.visible = false;
 endStage.visible = false;
 
-//force to have a width>=height view, todo: adjust the canvas to a fixed width-height scale
-var evt = "onorientationchange" in window ? "orientationchange" : "resize";
-window.addEventListener(evt, function(){
-    console.log(evt);
-    var width = document.documentElement.clientWidth;
-    var height = document.documentElement.clientHeight;
-    if(width < height)
+window.onresize = function(event){
+    if(window.innerWidth >= window.innerHeight/3*5)
     {
-        renderer.resize(height, width);
-        renderer.view.style.top = String((height-width)/2);
-        renderer.view.style.left = String(0-(height-width)/2);
-        renderer.view.style.transform = "rotate(90deg)";
-        renderer.view.style["transform-origin"] = "50% 50%";
+        width = window.innerHeight/3*5;
+        height = window.innerHeight;
     }
     else
     {
-        renderer.resize(width, height);
-        renderer.view.style.top = 0;
-        renderer.view.style.left = 0;
-        renderer.view.style.transform = "none";
+        width = window.innerWidth;
+        height = window.innerWidth * 0.6;
     }
+    renderer.resize(width, height);
+};
 
-}, false);
-
-//copied from https://github.com/kittykatattack/learningPixi#movingexplorer
-// making basic keyboard movement
-/*
-function keyboard(keyCode) {
-    var key = {};
-    key.code = keyCode;
-    key.isDown = false;
-    key.isUp = true;
-    key.press = undefined;
-    key.release = undefined;
-    //The `downHandler`
-    key.downHandler = function(event) {
-        if (event.keyCode === key.code) {
-            if (key.isUp && key.press) key.press();
-            key.isDown = true;
-            key.isUp = false;
-        }
-        event.preventDefault();
-    };
-
-    //The `upHandler`
-    key.upHandler = function(event) {
-        if (event.keyCode === key.code) {
-            if (key.isDown && key.release) key.release();
-            key.isDown = false;
-            key.isUp = true;
-        }
-        event.preventDefault();
-    };
-
-    //Attach event listeners
-    window.addEventListener(
-        "keydown", key.downHandler.bind(key), false
-    );
-    window.addEventListener(
-        "keyup", key.upHandler.bind(key), false
-    );
-    return key;
-}
-*/
 
 //add welcome text
 var wMessage = new PIXI.Text(
@@ -199,8 +164,8 @@ function setupChoiceStage(){
     choiceStage.removeChildren();
     currentSongNum = 1;
     music = null;
-    var width = renderer.view.width;
-    var height = renderer.view.height;
+    //var width = renderer.view.width;
+    //var height = renderer.view.height;
     var ratio = (Math.sqrt(5) - 1)/2;
 
     var triangle1 = new PIXI.Graphics();
@@ -246,27 +211,30 @@ function setupChoiceStage(){
 
     //display the name of the songs
 
-        if(currentSongNum - 1 >= 0)
-        {
-            var formerName = new PIXI.Text(nameList[currentSongNum - 1],
-                {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
-            formerName.anchor.set(0.5, 0.5);
-            formerName.position.set(midX, midY+0.24*height);
-        }
+    var formerText = "";
+    if(currentSongNum - 1 >= 0)
+    {
+        formerText = nameList[currentSongNum - 1];
+    }
+    var formerName = new PIXI.Text(formerText,
+        {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
+    formerName.anchor.set(0.5, 0.5);
+    formerName.position.set(midX, midY+0.24*height);
 
-        var Name = new PIXI.Text(nameList[currentSongNum],
-            {fontFamily: "Helvetica", fontSize: 36, fontWeight: "lighter", fill: "black"});
-        Name.anchor.set(0.5, 0.5);
-        Name.position.set(midX, formerName.position.y+formerName.height+30);
+    var Name = new PIXI.Text(nameList[currentSongNum],
+        {fontFamily: "Helvetica", fontSize: 36, fontWeight: "lighter", fill: "black"});
+    Name.anchor.set(0.5, 0.5);
+    Name.position.set(midX, formerName.position.y+formerName.height+30);
 
-        if(currentSongNum + 1 < nameList.length)
-        {
-            var latterName = new PIXI.Text(nameList[currentSongNum+1],
-                {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
-            latterName.anchor.set(0.5, 0.5);
-            latterName.position.set(midX, Name.position.y+Name.height+24);
-        }
-
+    var latterText = "";
+    if(currentSongNum + 1 < nameList.length)
+    {
+        latterText = nameList[currentSongNum+1]
+    }
+    var latterName = new PIXI.Text(latterText,
+        {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
+    latterName.anchor.set(0.5, 0.5);
+    latterName.position.set(midX, Name.position.y+Name.height+24);
 
     bg.width = width;
     bg.height = height;
@@ -274,11 +242,9 @@ function setupChoiceStage(){
     choiceStage.addChild(bg);
     choiceStage.addChild(triangle1);
     choiceStage.addChild(triangle2);
-    if(formerName)
-        choiceStage.addChild(formerName);
+    choiceStage.addChild(formerName);
     choiceStage.addChild(Name);
-    if(latterName)
-        choiceStage.addChild(latterName);
+    choiceStage.addChild(latterName);
     triangle2.interactive = true;
     triangle2.click = function(event){
         //console.log(event.target);
@@ -498,8 +464,8 @@ function setupGameStage()
     miss = 0;
 
     gameStage.addChild(bg);
-    var width = renderer.view.width;
-    var height = renderer.view.height;
+    //var width = renderer.view.width;
+    //var height = renderer.view.height;
 
     var cover = new PIXI.Graphics();
     cover.beginFill(0xFFFFFF, 0.85);
@@ -753,7 +719,7 @@ function setupGameStage()
     beatList.splice(0, beatList.length);
     time = 0;
     startTime = null;
-    aheadTime = height/75/songVelocity;
+    aheadTime = height/songVelocity*13.3;
 
     //load keyCodes
     switch(track.keyNumber)
@@ -796,68 +762,6 @@ function setupGameStage()
             keyCodes.push(32);
         }
 
-        /*
-        var keyObject = keyboard(keyCodes[i]);
-        keyObjectList.push(keyObject);
-
-        keyObject.press = function(){
-            for(var j = 0; j < beatList; j++)
-            {
-                var beat = beatList[j];
-                if(beat.track !== i)
-                    continue;
-
-                var hit = false;
-                if(beat.beatType === 0 || beat.beatType === 1)
-                {
-                    if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY+10))
-                        || endLine.containsPoint(new PIXI.Point(beat.center, beat.startY-10)))
-                    {
-                        hit = true;
-                        gameStage.removeChild(beat);
-                        beatList[j] = null;
-                        point += onePoint;
-                        maxPerfect += 1;
-
-                    }
-                    else if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY+30))
-                        || endLine.containsPoint(new PIXI.Point(beat.center, beat.startY-30)))
-                    {
-                        hit = true;
-                        gameStage.removeChild(beat);
-                        beatList[j] = null;
-                        point += 0.8*onePoint;
-                        perfect += 1;
-                    }
-                    else if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY+60))
-                        || endLine.containsPoint(new PIXI.Point(beat.center, beat.startY-60)))
-                    {
-                        hit = true;
-                        gameStage.removeChild(beat);
-                        beatList[j] = null;
-                        point += 0.6*onePoint;
-                        ok += 1;
-                    }
-
-                    if(hit)
-                    {
-                        console.log("hit");
-                        combo++;
-                        comboText.text = "Combo: "+ String(combo);
-                        pointText.text = String(Math.floor(point)+1);
-                        renderer.render(stage);
-                    }
-
-                }
-                else
-                {
-                    //todo: beatType = 1
-                }
-
-            }
-        };
-
-        */
     }
 
 }
@@ -879,9 +783,9 @@ function setupSound()
     }
 
     var StartText = new PIXI.Text("Start",
-        {fontFamily: "Helvetica", fontSize: 56, fontWeight:"lighter", fill: "0x3A006F"});
+        {fontFamily: "Helvetica", fontSize: 64, fontWeight:"lighter", fill: "0x3A006F"});
     StartText.anchor.set(0.5, 0.5);
-    StartText.position.set(renderer.view.width/2, renderer.view.height/2);
+    StartText.position.set(width/2, height/2);
     StartText.interactive = true;
     StartText.buttonMode = true;
 
@@ -935,10 +839,12 @@ function gameLoop()
             }
             else
             {
-                var duration = beat.endtime - time;
-                var len = duration/aheadTime*0.8*renderer.view.height;
+                var duration = parseInt(beat.endtime) - time;
+                var len = 0.8*height*duration/aheadTime;
 
-                //beat.lineStyle(5, 0x000000, 1);
+                console.info(beat.endtime, "!!!");
+                console.info(time, "!!!");
+                console.info(typeof(beat.endtime), "!!!");
                 beat.beginFill(0x000000, 1);
 
                 beat.drawPolygon([
@@ -989,15 +895,28 @@ function gameLoop()
         if(beatList[j] !== null)
         {
             beatList[j].position.y += songVelocity;
-            beatList.startY += songVelocity;
+            beatList[j].startY += songVelocity;
 
-            if(beatList[j].startY >= endLine.y+endLine.height+34)
+            if(beatList[j].startY >= 0.8*renderer.view.height+endLine.height+90)
             {
                 miss++;
                 combo = 0;
+                comboText.text = "Combo: " + String(combo);
+                gameStage.removeChild(beatList[j]);
                 beatList[j] = null;
+
             }
         }
+    }
+
+    if(beatList.length === 0 && playPointer >= beatFlow.length -1)
+    {
+        isPaused = true;
+        gameStage.visible = false;
+        music.pause();
+        endStage.visible = true;
+        setupEndStage();
+        renderer.render(stage);
     }
 
     renderer.render(stage);
@@ -1008,8 +927,8 @@ function setupEndStage()
     endStage.removeChildren();
 
     endStage.addChild(bg);
-    var width = renderer.view.width;
-    var height = renderer.view.height;
+    //var width = renderer.view.width;
+    //var height = renderer.view.height;
 
     var cover = new PIXI.Graphics();
     cover.beginFill(0xFFFFFF, 0.85);
@@ -1224,9 +1143,10 @@ document.onkeydown = function(event){
     var keyCode = e.keyCode || e.which;
 
     event.preventDefault();
-    console.info(keyCode);
+    //console.info(keyCode);
 
     var height = renderer.view.height;
+    //console.info(height);
 
     if(e) {
         for (var i = 0; i < keyCodes.length; i++)
@@ -1237,44 +1157,50 @@ document.onkeydown = function(event){
                 for (var j = 0; j < beatList.length; j++)
                 {
                     var beat = beatList[j];
+                    if(!beat)
+                        continue;
+
                     if (beat.track != i)
                         continue;
 
-                    console.info(beat.track);
+                    console.info(beat.startY);
                     var hit = false;
-                    if (beat.startY <= 0.8 * height + 30 && beat.startY >= 0.8 * height - 30)
+                    if (beat.startY <= 0.8 * height + 5 && beat.startY >= 0.8 * height - 5)
                     {
                         hit = true;
                         gameStage.removeChild(beat);
                         beatList[j] = null;
                         point += onePoint;
                         maxPerfect += 1;
-
+                        drawGetPoint("max", i);
                     }
-                    else if (beat.startY <= 0.8 * height + 100 && beat.startY >= 0.8 * height - 100)
+                    else if (beat.startY <= 0.8 * height + 10 && beat.startY >= 0.8 * height - 10)
                     {
                         hit = true;
                         gameStage.removeChild(beat);
                         beatList[j] = null;
                         point += 0.8 * onePoint;
                         perfect += 1;
+                        drawGetPoint("perfect", i);
                     }
-                    else if (beat.startY <= 0.8 * height + 200 && beat.startY >= 0.8 * height - 200)
+                    else if (beat.startY <= 0.8 * height + 30 && beat.startY >= 0.8 * height - 30)
                     {
                         hit = true;
                         gameStage.removeChild(beat);
                         beatList[j] = null;
                         point += 0.6 * onePoint;
                         ok += 1;
+                        drawGetPoint("perfect", i);
                     }
 
                     if (hit) {
                         console.log("hit");
-                        beat.visible = false;
+                        //beat.visible = false;
                         combo++;
                         comboText.text = "Combo: " + String(combo);
                         pointText.text = String(Math.floor(point) + 1);
                         renderer.render(stage);
+                        break;
 
                     }
 
@@ -1284,3 +1210,68 @@ document.onkeydown = function(event){
         }
     }
 };
+
+function drawGetPoint(type, trackNum)
+{
+    var getPoint = new PIXI.Graphics();
+    var center = startPos + (trackNum+0.5)*trackWidth;
+
+    getPoint.x = center;
+    getPoint.y = 0.8*height;
+
+    if(type === "max")
+    {
+        getPoint.lineStyle(2, 0x9400D3, 1);
+    }
+    else if(type === "perfect")
+    {
+        getPoint.lineStyle(2, 0xFF8C00, 1);
+    }
+    else
+    {
+        getPoint.lineStyle(2, 0x6495ED, 1);
+    }
+    getPoint.beginFill(0xFFFFFF, 0);
+
+    getPoint.drawPolygon([
+        center - 10, 0.8*height,
+        center, 0.8*height + 10,
+        center + 10, 0.8*height,
+        center, 0.8*height-10,
+        center - 10, 0.8*height
+    ]);
+    getPoint.endFill();
+
+    getPoint.pivot.x = getPoint.width/2;
+    getPoint.pivot.y = getPoint.height/2;
+
+    if(beatList.length > 0)
+    {
+        var i = 0;
+        while(beatList[i] === null)
+        {
+            i++;
+        }
+
+        if(beatList[i] !== null)
+        {
+            var index = gameStage.getChildIndex(beatList[i]);
+            gameStage.addChildAt(getPoint, index);
+            var tickerNum = 0;
+
+            var ticker = new PIXI.ticker.Ticker();
+            ticker.stop();
+            ticker.add(function()
+            {
+                tickerNum++;
+                getPoint.setTransform(0, 0, tickerNum/10+1, tickerNum/10+1);
+                if(tickerNum >= 50)
+                {
+                    ticker.stop();
+                }
+            });
+            ticker.start();
+        }
+    }
+}
+
