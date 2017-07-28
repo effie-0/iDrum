@@ -1,0 +1,7 @@
+background.jpg
+directory.txt
+namirin - Koi no Hime Hime Pettanko (Litharrale) [Easy].osu
+namirin - Koi no Hime Hime Pettanko (Litharrale) [Hard].osu
+namirin - Koi no Hime Hime Pettanko (Litharrale) [Normal].osu
+namirin - Koi no Hime Hime Pettanko (Litharrale) [Virtue's HIME].osu
+song.mp3

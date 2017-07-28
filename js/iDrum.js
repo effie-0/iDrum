@@ -65,6 +65,7 @@ window.addEventListener(evt, function(){
 
 //copied from https://github.com/kittykatattack/learningPixi#movingexplorer
 // making basic keyboard movement
+/*
 function keyboard(keyCode) {
     var key = {};
     key.code = keyCode;
@@ -101,6 +102,7 @@ function keyboard(keyCode) {
     );
     return key;
 }
+*/
 
 //add welcome text
 var wMessage = new PIXI.Text(
@@ -131,24 +133,23 @@ welcomeStage.click = welcomeStage.tap = function(data){
 };//end of welcome page
 
 //choiceStage
-//load background images
+//load songs
+//loadSongs();
+
 var bgList = [];
-for(var i = 0; i < 5; i++)
+for(var i = 0; i < songList.length; i++)
 {
-    var src = "../src/img/" + i + ".jpg";
+    var src = songList[i].background;
     var texture = PIXI.Texture.fromImage(src);
     bgList.push(texture);
 }
 var bg = new PIXI.extras.AnimatedSprite(bgList, false);
 
 var nameList = [];
-for(i = 0; i < 5; i++)
+for(i = 0; i < songList.length; i++)
 {
-    var str = "Song: " + i;
-    nameList.push(str);
+    nameList.push(songList[i].title);
 }
-
-var songList = [];
 
 var beatList = [];
 var startTime = null;
@@ -192,6 +193,7 @@ var onePoint = 0;
 var keyAlphas = [];
 var keyCodes = [];
 var keyObjectList = [];
+var endLine = null;
 
 function setupChoiceStage(){
     choiceStage.removeChildren();
@@ -243,24 +245,27 @@ function setupChoiceStage(){
     triangle2.endFill();
 
     //display the name of the songs
-    if(currentSongNum > 0 && currentSongNum < nameList.length - 1)
-    {
-        var formerName = new PIXI.Text(nameList[currentSongNum - 1],
-            {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
-        formerName.anchor.set(0.5, 0.5);
-        formerName.position.set(midX, midY+0.24*height);
+
+        if(currentSongNum - 1 >= 0)
+        {
+            var formerName = new PIXI.Text(nameList[currentSongNum - 1],
+                {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
+            formerName.anchor.set(0.5, 0.5);
+            formerName.position.set(midX, midY+0.24*height);
+        }
 
         var Name = new PIXI.Text(nameList[currentSongNum],
             {fontFamily: "Helvetica", fontSize: 36, fontWeight: "lighter", fill: "black"});
         Name.anchor.set(0.5, 0.5);
         Name.position.set(midX, formerName.position.y+formerName.height+30);
 
-        var latterName = new PIXI.Text(nameList[currentSongNum+1],
-            {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
-        latterName.anchor.set(0.5, 0.5);
-        latterName.position.set(midX, Name.position.y+Name.height+24);
-
-    }
+        if(currentSongNum + 1 < nameList.length)
+        {
+            var latterName = new PIXI.Text(nameList[currentSongNum+1],
+                {fontFamily: "Helvetica", fontSize: 28, fontWeight: "lighter", fill: "black"});
+            latterName.anchor.set(0.5, 0.5);
+            latterName.position.set(midX, Name.position.y+Name.height+24);
+        }
 
 
     bg.width = width;
@@ -269,9 +274,11 @@ function setupChoiceStage(){
     choiceStage.addChild(bg);
     choiceStage.addChild(triangle1);
     choiceStage.addChild(triangle2);
-    choiceStage.addChild(formerName);
+    if(formerName)
+        choiceStage.addChild(formerName);
     choiceStage.addChild(Name);
-    choiceStage.addChild(latterName);
+    if(latterName)
+        choiceStage.addChild(latterName);
     triangle2.interactive = true;
     triangle2.click = function(event){
         //console.log(event.target);
@@ -293,20 +300,20 @@ function setupChoiceStage(){
 
         if(currentSongNum !== temp)
         {
-            if(currentSongNum > 0)
+            if(currentSongNum > 0 && formerName)
             {
                 formerName.text = nameList[currentSongNum-1];
             }
-            else
+            else if(formerName)
             {
                 formerName.text = "";
             }
             Name.text = nameList[currentSongNum];
-            if(currentSongNum+1 < nameList.length)
+            if(currentSongNum+1 < nameList.length && latterName)
             {
                 latterName.text = nameList[currentSongNum+1];
             }
-            else
+            else if(latterName)
             {
                 latterName.text = "";
             }
@@ -475,6 +482,9 @@ function setupChoiceStage(){
 
 }
 
+var comboText = null;
+var pointText = null;
+
 function setupGameStage()
 {
     gameStage.removeChildren();
@@ -499,13 +509,13 @@ function setupGameStage()
 
     //point
     point = 0;
-    var pointText = new PIXI.Text(String(point),
+    pointText = new PIXI.Text(String(point),
         {fontFamily: "Helvetica", fontSize: 32, fontWeight:"lighter", fill: "0x3A006F"});
     pointText.anchor.set(1, 0);
     pointText.position.set(width - 0.05*height, 0.05*height);
     gameStage.addChild(pointText);
 
-    var comboText = new PIXI.Text("Combo: "+String(combo),
+    comboText = new PIXI.Text("Combo: "+String(combo),
         {fontFamily: "Helvetica", fontSize: 26, fontWeight:"lighter", fill: "0x3A006F"});
     comboText.anchor.set(0.5, 0);
     comboText.position.set(width/2, 5);
@@ -692,14 +702,14 @@ function setupGameStage()
     };//end of pausePanel
 
     //endLine
-    var endLine = new PIXI.Graphics();
+    endLine = new PIXI.Graphics();
     endLine.beginFill(0x000000, 1);
     endLine.drawRect(0, 0.8*height, width, 5);
     endLine.endFill();
     gameStage.addChild(endLine);
 
     //load beatMap
-    loadTrack(songList[currentSongNum].beatmap);
+    loadTrack(songList[currentSongNum].address);
 
     //init tracks
     startPos = 0.1*width;
@@ -736,7 +746,7 @@ function setupGameStage()
     gameStage.addChild(trackDrawer);
 
     //load music
-    sounds.load([songList[currentSongNum].address]);
+    sounds.load([songList[currentSongNum].song]);
     sounds.whenLoaded = setupSound;
 
     //init
@@ -772,6 +782,7 @@ function setupGameStage()
     }
 
     keyCodes.splice(0, keyCodes.length);
+
     keyObjectList.splice(0, keyObjectList.length);
     for(i = 0; i < keyAlphas.length; i++)
     {
@@ -785,6 +796,7 @@ function setupGameStage()
             keyCodes.push(32);
         }
 
+        /*
         var keyObject = keyboard(keyCodes[i]);
         keyObjectList.push(keyObject);
 
@@ -796,9 +808,10 @@ function setupGameStage()
                     continue;
 
                 var hit = false;
-                if(beat.beatType === 0)
+                if(beat.beatType === 0 || beat.beatType === 1)
                 {
-                    if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY)))
+                    if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY+10))
+                        || endLine.containsPoint(new PIXI.Point(beat.center, beat.startY-10)))
                     {
                         hit = true;
                         gameStage.removeChild(beat);
@@ -807,8 +820,8 @@ function setupGameStage()
                         maxPerfect += 1;
 
                     }
-                    else if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY+10))
-                        || endLine.containsPoint(new PIXI.Point(beat.center, beat.startY-10)))
+                    else if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY+30))
+                        || endLine.containsPoint(new PIXI.Point(beat.center, beat.startY-30)))
                     {
                         hit = true;
                         gameStage.removeChild(beat);
@@ -816,8 +829,8 @@ function setupGameStage()
                         point += 0.8*onePoint;
                         perfect += 1;
                     }
-                    else if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY+30))
-                        || endLine.containsPoint(new PIXI.Point(beat.center, beat.startY-30)))
+                    else if(endLine.containsPoint(new PIXI.Point(beat.center, beat.startY+60))
+                        || endLine.containsPoint(new PIXI.Point(beat.center, beat.startY-60)))
                     {
                         hit = true;
                         gameStage.removeChild(beat);
@@ -828,9 +841,10 @@ function setupGameStage()
 
                     if(hit)
                     {
+                        console.log("hit");
                         combo++;
                         comboText.text = "Combo: "+ String(combo);
-                        pointText.text = String(point);
+                        pointText.text = String(Math.floor(point)+1);
                         renderer.render(stage);
                     }
 
@@ -843,13 +857,16 @@ function setupGameStage()
             }
         };
 
+        */
     }
+
 }
 
 
 function setupSound()
 {
-    music = sounds[songList[currentSongNum].address];
+    music = sounds[songList[currentSongNum].song];
+    console.info(music);
     music.pause();
     music.loop = false;
     if(isMuted)
@@ -865,7 +882,6 @@ function setupSound()
         {fontFamily: "Helvetica", fontSize: 56, fontWeight:"lighter", fill: "0x3A006F"});
     StartText.anchor.set(0.5, 0.5);
     StartText.position.set(renderer.view.width/2, renderer.view.height/2);
-    gameStage.addChild(StartText);
     StartText.interactive = true;
     StartText.buttonMode = true;
 
@@ -879,6 +895,8 @@ function setupSound()
     };
 
     onePoint = 1000000/beatFlow.length;
+    gameStage.addChild(StartText);
+    renderer.render(stage);
 }
 
 function musicPlay()
@@ -895,6 +913,7 @@ function gameLoop()
     if(_time - startTime > time)
     {
         time = _time - startTime;
+        //console.info(time);
         popBeat(time);
         for(var i = 0; i < busArray.length; i++)
         {
@@ -916,18 +935,34 @@ function gameLoop()
             }
             else
             {
-                //todo
-                beat.lineStyle(5, 0x000000, 1);
-                beat.beginFill(0xFC4C4A, 1);
+                var duration = beat.endtime - time;
+                var len = duration/aheadTime*0.8*renderer.view.height;
+
+                //beat.lineStyle(5, 0x000000, 1);
+                beat.beginFill(0x000000, 1);
 
                 beat.drawPolygon([
+                    center-15, 0,
+                    center, -15,
+                    center+15, 0,
+                    center+15, -len,
+                    center, -len-15,
+                    center-15, -len,
+                    center-15, 0
+                ]);
+                beat.endFill();
+
+                beat.beginFill(0xFC4C4A, 1);
+                beat.drawPolygon([
                     center-10, 0,
-                    center, -10,
-                    center+10, 0,
                     center, 10,
+                    center+10, 0,
+                    center, -10,
                     center-10, 0
                 ]);
+                beat.endFill();
 
+                beat.len = len;
                 beat.beatType = 1;
             }
             beat.endFill();
@@ -943,9 +978,26 @@ function gameLoop()
 
     for(var j = 0; j < beatList.length; j++)
     {
-        beatList[j].position.y += songVelocity;
-        beatList.startY += songVelocity;
-        //todo
+        if(j === 0 && beatList[j] === null)
+        {
+            beatList.shift();
+        }
+    }
+
+    for( j = 0; j < beatList.length; j++)
+    {
+        if(beatList[j] !== null)
+        {
+            beatList[j].position.y += songVelocity;
+            beatList.startY += songVelocity;
+
+            if(beatList[j].startY >= endLine.y+endLine.height+34)
+            {
+                miss++;
+                combo = 0;
+                beatList[j] = null;
+            }
+        }
     }
 
     renderer.render(stage);
@@ -971,7 +1023,7 @@ function setupEndStage()
     nameText.position.set(width/4, height/3);
     endStage.addChild(nameText);
 
-    var pointText = new PIXI.Text(String(point),
+    var pointText = new PIXI.Text(String(Math.floor(point)+1),
         {fontFamily: "Helvetica", fontSize: 36, fontWeight:"lighter", fill: "0x3A006F"});
     pointText.anchor.set(0.5, 0);
     pointText.position.set(width/4, height/3*2);
@@ -1072,27 +1124,27 @@ function setupEndStage()
     display.addChild(missText);
 
     var grade = "";
-    if(point < 500000)
+    if(Math.floor(point)+1 < 500000)
     {
         grade = "F";
     }
-    else if(point < 600000)
+    else if(Math.floor(point)+1 < 600000)
     {
         grade = "E";
     }
-    else if(point < 700000)
+    else if(Math.floor(point)+1 < 700000)
     {
         grade = "D";
     }
-    else if(point < 800000)
+    else if(Math.floor(point)+1 < 800000)
     {
         grade = "C";
     }
-    else if(point < 900000)
+    else if(Math.floor(point)+1 < 900000)
     {
         grade = "B";
     }
-    else if(point !== 1000000)
+    else if(Math.floor(point)+1 !== 1000000)
     {
         grade = "A";
     }
@@ -1166,3 +1218,69 @@ function setupEndStage()
     endStage.addChild(againButton);
     endStage.addChild(nextButton);
 }
+
+document.onkeydown = function(event){
+    var e = event || window.event;
+    var keyCode = e.keyCode || e.which;
+
+    event.preventDefault();
+    console.info(keyCode);
+
+    var height = renderer.view.height;
+
+    if(e) {
+        for (var i = 0; i < keyCodes.length; i++)
+        {
+            if (keyCode == keyCodes[i])
+            {
+                //console.info(keyCode ,",,");
+                for (var j = 0; j < beatList.length; j++)
+                {
+                    var beat = beatList[j];
+                    if (beat.track != i)
+                        continue;
+
+                    console.info(beat.track);
+                    var hit = false;
+                    if (beat.startY <= 0.8 * height + 30 && beat.startY >= 0.8 * height - 30)
+                    {
+                        hit = true;
+                        gameStage.removeChild(beat);
+                        beatList[j] = null;
+                        point += onePoint;
+                        maxPerfect += 1;
+
+                    }
+                    else if (beat.startY <= 0.8 * height + 100 && beat.startY >= 0.8 * height - 100)
+                    {
+                        hit = true;
+                        gameStage.removeChild(beat);
+                        beatList[j] = null;
+                        point += 0.8 * onePoint;
+                        perfect += 1;
+                    }
+                    else if (beat.startY <= 0.8 * height + 200 && beat.startY >= 0.8 * height - 200)
+                    {
+                        hit = true;
+                        gameStage.removeChild(beat);
+                        beatList[j] = null;
+                        point += 0.6 * onePoint;
+                        ok += 1;
+                    }
+
+                    if (hit) {
+                        console.log("hit");
+                        beat.visible = false;
+                        combo++;
+                        comboText.text = "Combo: " + String(combo);
+                        pointText.text = String(Math.floor(point) + 1);
+                        renderer.render(stage);
+
+                    }
+
+                }
+
+            }
+        }
+    }
+};
