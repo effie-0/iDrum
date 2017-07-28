@@ -76,7 +76,7 @@ wMessage.position.set((renderer.view.width-wMessage.width)/2, (renderer.view.hei
 
 //add background of welcome page
 var img = new Image();
-img.src = "../src/img/bg.jpg";
+img.src = "./src/img/bg.jpg";
 img.onload = function(){
     var baseTexture = new PIXI.BaseTexture(this);
     var texture = new PIXI.Texture(baseTexture);
@@ -136,8 +136,8 @@ var isPaused = false;
 var music = null;
 
 var muteList = [];
-var src1 = "../src/img/icon/MUTE.png";
-var src2 = "../src/img/icon/UNMUTE.png";
+var src1 = "./src/img/icon/MUTE.png";
+var src2 = "./src/img/icon/UNMUTE.png";
 var texture1 = PIXI.Texture.fromImage(src1);
 var texture2 = PIXI.Texture.fromImage(src2);
 muteList.push(texture1);
@@ -496,7 +496,7 @@ function setupGameStage()
 
     var PauseImg = new Image();
     pauseTime = 0;
-    PauseImg.src = "../src/img/icon/PAUSE.png";
+    PauseImg.src = "./src/img/icon/PAUSE.png";
     PauseImg.onload = function(){
         var baseTexture = new PIXI.BaseTexture(this);
         var texture = new PIXI.Texture(baseTexture);
