@@ -789,9 +789,26 @@ function setupSound()
     StartText.interactive = true;
     StartText.buttonMode = true;
 
+    var TutorList = [];
+    for(var i = 0; i < keyAlphas.length; i++)
+    {
+        var TutorText = new PIXI.Text(keyAlphas[i],
+            {fontFamily: "Helvetica", fontSize: 24, fontWeight:"lighter", fill: "0x800000"});
+        TutorText.anchor.set(0.5, 0.5);
+        TutorText.position.set(startPos + (0.5+i)*trackWidth, 0.8*height);
+        gameStage.addChild(TutorText);
+        TutorList.push(TutorText);
+    }
+
     //start the game
     StartText.click = function(){
         gameStage.removeChild(StartText);
+
+        for(var i = 0; i < TutorList.length; i++)
+        {
+            gameStage.removeChild(TutorList[i]);
+        }
+
         setTimeout(musicPlay, aheadTime);
         startTime = new Date().getTime();
         gameLoop();
